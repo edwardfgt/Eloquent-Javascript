@@ -97,6 +97,19 @@ function routeRobot(state, memory) {
   return { direction: memory[0], memory: memory.slice(1) };
 }
 
+function findRoute(graph, from, to) {
+  let work = [{ at: from, route: [] }];
+  for (let i = 0; i < work.length; i++) {
+    let { at, route } = work[i];
+    for (let place of graph[at]) {
+      if (place == to) return route.concat(place);
+      if (!work.some((w) => w.at == place)) {
+        work.push({ at: place, route: route.concat(place) });
+      }
+    }
+  }
+}
+
 function goalOrientedRobot({ place, parcels }, route) {
   if (route.length == 0) {
     let parcel = parcels[0];
@@ -108,3 +121,31 @@ function goalOrientedRobot({ place, parcels }, route) {
   }
   return { direction: route[0], memory: route.slice(1) };
 }
+
+function runRobotSteps(state, robot, memory) {
+  for (let turn = 0; ; turn++) {
+    if (state.parcels.length == 0) {
+      return turn;
+    }
+    let action = robot(state, memory);
+    state = state.move(action.direction);
+    memory = action.memory;
+  }
+}
+
+function compareRobots(robot1, memory1, robot2, memory2) {
+  let totalStepsRobot1 = 0;
+  let totalStepsRobot2 = 0;
+
+  for (let i = 0; i < 100; i++) {
+    let task = VillageState.random();
+
+    totalStepsRobot1 += runRobotSteps(task, robot1, memory1);
+    totalStepsRobot2 += runRobotSteps(task, robot2, memory2);
+  }
+
+  console.log(`Robot 1 average steps: ${totalStepsRobot1 / 100}`);
+  console.log(`Robot 2 average steps: ${totalStepsRobot2 / 100}`);
+}
+
+compareRobots(randomRobot, [], goalOrientedRobot, []);
