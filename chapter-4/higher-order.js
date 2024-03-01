@@ -46,3 +46,5 @@ function textScripts(text) {
     })
     .join(", ");
 }
+
+module.exports = { repeat, characterScript, countBy, textScripts };

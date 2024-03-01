@@ -148,4 +148,49 @@ function compareRobots(robot1, memory1, robot2, memory2) {
   console.log(`Robot 2 average steps: ${totalStepsRobot2 / 100}`);
 }
 
-compareRobots(randomRobot, [], goalOrientedRobot, []);
+function findShortestRoute(graph, from, to) {
+  let work = [{ at: from, route: [] }];
+  for (let i = 0; i < work.length; i++) {
+    let { at, route } = work[i];
+    for (let place of graph[at]) {
+      if (place == to) return route.concat(place);
+      if (!work.some((w) => w.at == place)) {
+        work.push({ at: place, route: route.concat(place) });
+      }
+    }
+  }
+}
+
+function distance(graph, from, to) {
+  return findShortestRoute(graph, from, to).length;
+}
+
+function nearestParcelRobot({ place, parcels }, route) {
+  if (route.length == 0) {
+    let shortestDistance = Infinity;
+    let targetParcelIndex;
+
+    // Loop through each parcel to find the nearest one
+    for (let i = 0; i < parcels.length; i++) {
+      let parcel = parcels[i];
+      let targetPlace = parcel.place !== place ? parcel.place : parcel.address;
+      let currentDistance = distance(roadGraph, place, targetPlace);
+
+      if (currentDistance < shortestDistance) {
+        shortestDistance = currentDistance;
+        targetParcelIndex = i;
+      }
+    }
+
+    let targetParcel = parcels[targetParcelIndex];
+    if (targetParcel.place !== place) {
+      route = findShortestRoute(roadGraph, place, targetParcel.place);
+    } else {
+      route = findShortestRoute(roadGraph, place, targetParcel.address);
+    }
+  }
+
+  return { direction: route[0], memory: route.slice(1) };
+}
+
+compareRobots(nearestParcelRobot, [], goalOrientedRobot, []);
